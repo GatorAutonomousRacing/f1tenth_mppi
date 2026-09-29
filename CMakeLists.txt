@@ -17,9 +17,64 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+
+find_package(laser_geometry REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_sensor_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(ackermann_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG yaml-cpp-0.9.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+)
+FetchContent_MakeAvailable(yaml-cpp)
+
+add_executable(
+  ray_casting_node src/ray_casting_node.cpp
+  /sim_ws/src/range_libc/vendor/lodepng/lodepng.cpp
+
+)
+
+ament_target_dependencies(ray_casting_node
+    rclcpp
+    std_msgs
+    nav_msgs
+    sensor_msgs
+)
+
+target_compile_definitions(
+  ray_casting_node PRIVATE USE_CUDA=0
+)
+
+target_include_directories(
+  ray_casting_node PRIVATE 
+  /sim_ws/src/range_libc/includes
+  /sim_ws/src/range_libc
+
+)
+
+target_link_libraries(ray_casting_node yaml-cpp::yaml-cpp)
+
+
+install(TARGETS
+  ray_casting_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
