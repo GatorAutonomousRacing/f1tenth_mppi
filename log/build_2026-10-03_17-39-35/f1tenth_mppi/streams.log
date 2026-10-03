@@ -1,0 +1,35 @@
+[0.057s] Invoking command in '/sim_ws/src/f1tenth_mppi/build/f1tenth_mppi': /usr/bin/cmake /sim_ws/src/f1tenth_mppi -DCMAKE_INSTALL_PREFIX=/sim_ws/src/f1tenth_mppi/install/f1tenth_mppi
+[0.225s] -- The C compiler identification is GNU 9.4.0
+[0.323s] -- The CXX compiler identification is GNU 9.4.0
+[0.333s] -- Check for working C compiler: /usr/bin/cc
+[0.429s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.436s] -- Detecting C compiler ABI info
+[0.531s] -- Detecting C compiler ABI info - done
+[0.539s] -- Detecting C compile features
+[0.540s] -- Detecting C compile features - done
+[0.543s] -- Check for working CXX compiler: /usr/bin/c++
+[0.604s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[0.606s] -- Detecting CXX compiler ABI info
+[0.674s] -- Detecting CXX compiler ABI info - done
+[0.683s] -- Detecting CXX compile features
+[0.684s] -- Detecting CXX compile features - done
+[0.714s] CMake Error at CMakeLists.txt:19 (find_package):
+[0.714s]   By not providing "Findament_cmake.cmake" in CMAKE_MODULE_PATH this project
+[0.714s]   has asked CMake to find a package configuration file provided by
+[0.714s]   "ament_cmake", but CMake did not find one.
+[0.714s] 
+[0.715s]   Could not find a package configuration file provided by "ament_cmake" with
+[0.715s]   any of the following names:
+[0.715s] 
+[0.715s]     ament_cmakeConfig.cmake
+[0.715s]     ament_cmake-config.cmake
+[0.715s] 
+[0.715s]   Add the installation prefix of "ament_cmake" to CMAKE_PREFIX_PATH or set
+[0.715s]   "ament_cmake_DIR" to a directory containing one of the above files.  If
+[0.715s]   "ament_cmake" provides a separate development package or SDK, be sure it
+[0.715s]   has been installed.
+[0.715s] 
+[0.715s] 
+[0.715s] -- Configuring incomplete, errors occurred!
+[0.715s] See also "/sim_ws/src/f1tenth_mppi/build/f1tenth_mppi/CMakeFiles/CMakeOutput.log".
+[0.718s] Invoked command in '/sim_ws/src/f1tenth_mppi/build/f1tenth_mppi' returned '1': /usr/bin/cmake /sim_ws/src/f1tenth_mppi -DCMAKE_INSTALL_PREFIX=/sim_ws/src/f1tenth_mppi/install/f1tenth_mppi

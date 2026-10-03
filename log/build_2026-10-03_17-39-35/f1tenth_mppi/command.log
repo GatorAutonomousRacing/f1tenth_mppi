@@ -1,0 +1,2 @@
+Invoking command in '/sim_ws/src/f1tenth_mppi/build/f1tenth_mppi': /usr/bin/cmake /sim_ws/src/f1tenth_mppi -DCMAKE_INSTALL_PREFIX=/sim_ws/src/f1tenth_mppi/install/f1tenth_mppi
+Invoked command in '/sim_ws/src/f1tenth_mppi/build/f1tenth_mppi' returned '1': /usr/bin/cmake /sim_ws/src/f1tenth_mppi -DCMAKE_INSTALL_PREFIX=/sim_ws/src/f1tenth_mppi/install/f1tenth_mppi
