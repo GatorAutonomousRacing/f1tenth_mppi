@@ -1,0 +1,12 @@
+1. ray casting node will filter out walls to publish only the section of the point cloud covering
+obstacles
+
+2. reference path alignment (global raceline, basically)
+
+3. lookahead dist = multiply vehicle's maximum forward velocity with the lookahead time
+
+4. lookahead point = specific pose on the global reference path located at the lookahead distance
+from current position of the vehiclea
+
+following cost - encouarges trajectory to move toward lookahead point
+alignment cost - minimize lateral deviations and ensure vehicle orientation is consistent with the reference path

@@ -9,7 +9,12 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <stdexcept>
+#include <utility>
+#include "map_sdf_reader.h"
 #include <RangeLib.h>
+#include "dbscan.hpp"
+
 
 using std::placeholders::_1;
 
@@ -30,37 +35,25 @@ public:
         ego_odom_sub = this->create_subscription<nav_msgs::msg::Odometry>("/ego_racecar/odom", 1, std::bind(&RayCaster::ego_odom_cb, this, _1));
         cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
             "/pointcloud", 3);
-
-        RCLCPP_INFO(this->get_logger(), "wow\n");
+        
+        
+        
         try {
             rc = std::make_unique<ranges::CDDTCast>(map_cddt("Spielberg"));
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "Map load failed: %s", e.what());
             throw;
         }
+
+       track_sdf = map_sdf("/sim_ws/src/f1tenth_mppi/scripts/track_sdf.f32", res, origin_x, origin_y);
+       RCLCPP_INFO(get_logger(), "sdf processed\n");
     }
 
-private:
-    // Laser projection tool
-    laser_geometry::LaserProjection projector_;
-    // subscriptions
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_sub;
-    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr ray_casted_scan_pub;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ego_odom_sub;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
-
-    // map properties
-    float res, origin_x, origin_y;
-    int map_height_px;
-
-    // odom
-    bool ego_odom_updated = false;
-    odom ego_odom = {
-        0.0, 0.0, 0.0
-    };
-    
-    // map representation
-    std::unique_ptr<ranges::CDDTCast> rc;
+    float min_dist_to_wall(float lx, float ly, float range, float angle) {
+        float target_point_x = lx + range * std::cos(angle);
+        float target_point_y = ly + range * std::sin(angle);
+        return track_sdf.distance_to_wall(target_point_x, target_point_y);
+    }
 
     std::map<std::string, double> parse_yaml_file(const std::string& yaml_path) {
         YAML::Node yaml_contents = YAML::LoadFile(yaml_path);
@@ -91,30 +84,40 @@ private:
 		map_representation.world_origin_y = origin_y = static_cast<float>(yaml_params["origin_y"]);
 		map_representation.world_sin_angle = sinf(map_representation.world_angle);
 		map_representation.world_cos_angle = cosf(map_representation.world_angle);
-        
-      
-    
+
+
         // constants used in CDDTCast
         const float max_dist = 20.0f/res;
         const int theta_disc = 216;
 
         // call range_libc CDDTCast method to perform CDDT    
         return ranges::CDDTCast(map_representation, max_dist, theta_disc);
-    }    
+    }
 
     std::vector<float> apply_subtraction_filter(const std::vector<float>& ranges, float range_max, float angle_min, float angle_max, float angle_inc) {
         std::vector<float> predicted_ranges(ranges.size(), 0.0);
         // converts to pixel coordinates
-        float px = (ego_odom.x - origin_x) / res;
-        float py = map_height_px - 1 - (ego_odom.y - origin_y) / res; 
+
+        constexpr float LIDAR_OFFSET = 0.275f;  
+        const float lx = ego_odom.x + LIDAR_OFFSET * std::cos(ego_odom.yaw);
+        const float ly = ego_odom.y + LIDAR_OFFSET * std::sin(ego_odom.yaw);
+        float px = (lx - origin_x) / res;
+        float py = map_height_px - 1 - (ly - origin_y) / res; 
         for (std::size_t i = 0; i < ranges.size(); i++) {
             float map_yaw_angle = ego_odom.yaw + angle_min + i * angle_inc;
-            float predicted_range = rc->calc_range(px, py, -1 * map_yaw_angle); // multiply angle by -1 because in pixel coordinates, y increases downward
+            float predicted_range = rc->calc_range(px, py, -1 * map_yaw_angle); 
             float range_diff = predicted_range * res - ranges[i];
-            if (range_diff > 1.5) {
+
+            constexpr float WALL_THRESHOLD = 0.3;
+
+            if (range_diff > WALL_THRESHOLD) {
                 predicted_ranges[i] = ranges[i];
             }
             else {
+                predicted_ranges[i] = range_max + 2;
+            }
+
+            if (min_dist_to_wall(lx, ly, ranges[i], map_yaw_angle) < WALL_THRESHOLD) {
                 predicted_ranges[i] = range_max + 2;
             }
         }
@@ -126,11 +129,14 @@ private:
     {
         if (!ego_odom_updated) return;
         const sensor_msgs::msg::LaserScan& scan = *scan_ptr;
+
         float range_max = scan.range_max;
         float range_min = scan.range_min;
         float angle_min = scan.angle_min;
         float angle_max = scan.angle_max;
         float angle_increment = scan.angle_increment;
+        
+
         const std::vector<float>& ranges = scan.ranges;
         std::vector<float> filtered_ranges = apply_subtraction_filter(ranges, range_max, angle_min, angle_max, angle_increment);
         
@@ -147,6 +153,7 @@ private:
 
     }
 
+
     void ego_odom_cb(const nav_msgs::msg::Odometry::SharedPtr odom_ptr) {
         ego_odom_updated = true;
         ego_odom.x = odom_ptr->pose.pose.position.x;
@@ -162,6 +169,33 @@ private:
 
         // z remains zero
     }
+
+private:
+    // Laser projection tool
+    laser_geometry::LaserProjection projector_;
+    // subscriptions
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_sub;
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr ray_casted_scan_pub;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr ego_odom_sub;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
+
+    map_sdf track_sdf;
+
+
+    // map properties
+    float res, origin_x, origin_y;
+    int map_height_px;
+
+    // odom
+    bool ego_odom_updated = false;
+    odom ego_odom = {
+        0.0, 0.0, 0.0
+    };
+    
+    // map representation
+    std::unique_ptr<ranges::CDDTCast> rc;
+
+    
     
 };
 

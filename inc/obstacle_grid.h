@@ -1,0 +1,3 @@
+class ObstacleGrid {
+    ObstacleGrid()
+}

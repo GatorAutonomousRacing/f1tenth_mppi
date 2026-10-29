@@ -6,7 +6,7 @@ if(NOT CMAKE_C_STANDARD)
   set(CMAKE_C_STANDARD 99)
 endif()
 
-# Default to C++14
+# Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
@@ -34,6 +34,7 @@ find_package(nav_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -46,6 +47,7 @@ FetchContent_MakeAvailable(yaml-cpp)
 add_executable(
   ray_casting_node src/ray_casting_node.cpp
   /sim_ws/src/range_libc/vendor/lodepng/lodepng.cpp
+  /sim_ws/src/dbscan/dbscan.cpp
 
 )
 
@@ -66,6 +68,9 @@ target_include_directories(
   ray_casting_node PRIVATE 
   /sim_ws/src/range_libc/includes
   /sim_ws/src/range_libc
+  /sim_ws/src/f1tenth_mppi/inc
+  /sim_ws/src/dbscan
+  /sim_ws/src/dbscan/vendor
 
 )
 
