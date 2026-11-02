@@ -10,6 +10,7 @@ struct mppi_params {
     float min_steering_angle, mean_steering_angle, max_steering_angle;
     float dt;
     uint16_t num_trajectories;
+    float collision_threshold;
 };
 
 struct bounding_box {
